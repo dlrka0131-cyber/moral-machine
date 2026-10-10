@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모럴 머신 교실</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --bg: #f4f7fb;
+    --card: #ffffff;
+    --ink: #111827;
+    --muted: #4b5563;
+    --line: #dde4ee;
+    --primary: #3b6ff5;
+    --primary-soft: #e6edff;
+    --accent: #ffb020;
+    --danger: #e5484d;
+    --ok: #22a06b;
+    --shadow: 0 6px 20px rgba(31, 42, 58, .08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Pretendard", -apple-system, "Malgun Gothic", system-ui, sans-serif;
+    letter-spacing: 0;
+    word-break: keep-all;          /* 한글 단어 중간에서 줄이 끊기지 않게 */
+    overflow-wrap: break-word;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    font-size: 19px;
+    line-height: 1.65;
+  }
+  h1, h2, h3 { font-weight: 700; letter-spacing: -0.01em; }
+  #app { max-width: 1000px; margin: 0 auto; padding: 24px 16px 40px; }
+  button, input, textarea, select { font: inherit; letter-spacing: inherit; }
+  button { cursor: pointer; }
+
+  .btn {
+    border: 0; border-radius: 16px; padding: 14px 30px;
+    background: var(--primary); color: #fff; font-weight: 700; font-size: 21px;
+    box-shadow: var(--shadow); transition: transform .1s, opacity .2s;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  .btn.ghost { background: var(--card); color: var(--ink); border: 2px solid var(--line); box-shadow: none; }
+
+  /* 시작 화면 */
+  .intro { text-align: center; }
+  .hero { display: flex; align-items: center; justify-content: center; gap: 22px; padding: 4px 0 22px; text-align: left; }
+  .hero .emoji { font-size: 84px; line-height: 1; flex: none; }
+  .intro h1 { font-size: 52px; margin: 0 0 2px; color: var(--primary); line-height: 1.15; }
+  .intro .sub { color: var(--ink); font-size: 24px; font-weight: 700; margin: 0; }
+  .intro-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+  .icard { background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 16px 16px 18px; }
+  .icard .ic { font-size: 36px; line-height: 1; }
+  .icard h3 { font-size: 24px; margin: 8px 0 4px; }
+  .icard p { margin: 0; font-size: 19px; color: var(--muted); }
+  .icard.warn { background: #fff4dc; }
+  .howto { background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 18px 26px; margin-bottom: 14px; text-align: left; }
+  .howto h2 { font-size: 25px; margin: 0 0 10px; }
+  .steps { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+  .steps li { display: flex; gap: 14px; align-items: center; font-size: 21px; }
+  .steps .n {
+    flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: #fff;
+    font-weight: 700; display: grid; place-items: center;
+  }
+  .keys { display: flex; flex-wrap: wrap; gap: 8px 22px; padding-top: 12px; border-top: 2px dashed var(--line); font-size: 18px; }
+  .keys span { display: inline-flex; align-items: center; gap: 8px; }
+  .k-arrow { width: 34px; height: 0; border-top: 5px dashed #e8b400; }
+  .k-hit { width: 26px; height: 20px; border-radius: 6px; background: rgba(255,77,77,.45); border: 3px solid #ff4d4d; }
+  .start-box {
+    background: var(--primary-soft); border-radius: 22px; padding: 18px 24px; display: flex; gap: 14px;
+    justify-content: center; align-items: center; flex-wrap: wrap;
+  }
+  .start-box label { font-weight: 700; font-size: 21px; }
+  .start-box input {
+    font: inherit; font-size: 21px; padding: 12px 16px; border-radius: 14px; border: 2px solid #c6d4ff;
+    width: 240px; background: #fff; color: var(--ink);
+  }
+  .start-box .btn { font-size: 24px; padding: 14px 40px; }
+
+  /* 문제 화면 */
+  .topbar { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .qnum { font-weight: 700; font-size: 24px; color: var(--primary); white-space: nowrap; }
+  .progress { flex: 1; height: 14px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .progress > div { height: 100%; background: var(--primary); border-radius: 99px; transition: width .3s; }
+  .theme {
+    display: flex; align-items: center; gap: 14px; background: var(--card); border-radius: 20px;
+    box-shadow: var(--shadow); padding: 14px 20px; margin-bottom: 14px; border-left: 8px solid var(--primary);
+  }
+  .theme .ic { font-size: 38px; line-height: 1; }
+  .theme .lbl { font-size: 16px; font-weight: 700; color: var(--primary); }
+  .theme .tt { font-size: 27px; font-weight: 700; line-height: 1.3; }
+  .prompt { font-weight: 700; font-size: 25px; margin: 4px 0 16px; text-align: center; }
+  .prompt small { font-weight: 400; display: block; font-size: 18px; color: var(--muted); }
+
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .opt {
+    background: var(--card); border: 4px solid transparent; border-radius: 20px;
+    padding: 12px 12px 16px; text-align: left; color: var(--ink);
+    box-shadow: var(--shadow); transition: border-color .15s, transform .1s;
+  }
+  .opt:hover { border-color: #b9cbff; }
+  .opt.selected { border-color: var(--primary); background: var(--primary-soft); }
+  .opt svg { width: 100%; height: auto; display: block; border-radius: 12px; }
+  .opt-title { font-weight: 700; font-size: 25px; margin: 10px 4px 4px; display: flex; align-items: center; gap: 8px; }
+  .badge {
+    display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--primary); color: #fff; font-size: 19px;
+  }
+  .opt-hurt { margin: 0 4px; font-size: 19px; }
+  .opt-hurt b { color: var(--danger); }
+  .opt-note { margin: 4px 4px 0; font-size: 18px; color: var(--muted); }
+
+  .nav { display: flex; justify-content: space-between; margin-top: 16px; }
+  .feedback { margin-top: 16px; background: #e8f7ef; border-radius: 16px; padding: 14px 18px; font-size: 20px; }
+  .feedback.retry { background: #fff4dc; }
+
+  /* 부 안내 화면 */
+  .part { max-width: 640px; margin: 40px auto 0; text-align: center; }
+  .part-card { background: var(--card); border-radius: 28px; box-shadow: var(--shadow); padding: 40px 28px 34px; }
+  .part-no {
+    display: inline-block; background: var(--primary); color: #fff; font-weight: 700; font-size: 20px;
+    padding: 4px 18px; border-radius: 99px;
+  }
+  .part-ic { font-size: 76px; line-height: 1; margin: 22px 0 8px; }
+  .part h2 { font-size: 40px; margin: 0 0 8px; }
+  .part .desc { font-size: 23px; margin: 0 0 8px; }
+  .part .cnt { color: var(--muted); font-size: 18px; margin: 0; }
+  .part-steps { display: flex; justify-content: center; gap: 6px; margin-top: 22px; flex-wrap: wrap; }
+  .part-steps i { width: 12px; height: 12px; border-radius: 50%; background: var(--line); }
+  .part-steps i.done { background: #9db5fb; }
+  .part-steps i.now { background: var(--primary); transform: scale(1.3); }
+
+  /* 마지막 질문 */
+  .carq { max-width: 720px; margin: 0 auto; text-align: center; }
+  .carq h2 { font-size: 36px; margin: 10px 0; }
+  .car-choices { display: grid; gap: 14px; margin: 20px 0; }
+  .car-choice {
+    background: var(--card); border: 4px solid transparent; border-radius: 18px; padding: 18px 20px;
+    text-align: left; box-shadow: var(--shadow); color: var(--ink); font-size: 20px;
+  }
+  .car-choice:hover { border-color: #b9cbff; }
+  .car-choice.selected { border-color: var(--primary); background: var(--primary-soft); }
+  .car-choice .big { font-weight: 700; font-size: 25px; display: block; }
+
+  /* 결과 */
+  .result h1 { text-align: center; font-size: 44px; margin: 8px 0 4px; color: var(--primary); }
+  .result .lead { text-align: center; font-size: 23px; margin: 0 0 20px; }
+  .panel { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); padding: 22px; margin-bottom: 20px; }
+  .panel h2 { margin: 0 0 14px; font-size: 29px; }
+  .legend { display: flex; gap: 18px; font-size: 17px; color: var(--muted); margin-bottom: 8px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot-me { width: 16px; height: 16px; border-radius: 50%; background: var(--primary); display: inline-block; }
+  .dot-world { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 12px solid var(--accent); display: inline-block; }
+  .dim { padding: 14px 0; border-top: 1px solid var(--line); }
+  .dim:first-of-type { border-top: 0; }
+  .dim-title { font-weight: 700; font-size: 21px; margin-bottom: 18px; }
+  .track { position: relative; height: 14px; background: linear-gradient(90deg, #ffe1c2, #eef1f6 50%, #cfe0ff); border-radius: 99px; margin: 0 12px; }
+  .track .mid { position: absolute; left: 50%; top: -4px; bottom: -4px; width: 2px; background: #b7c1cf; }
+  .mk-me {
+    position: absolute; top: 50%; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--primary); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    transform: translate(-50%, -50%); color: #fff; font-size: 12px; font-weight: 700;
+    display: grid; place-items: center;
+  }
+  .mk-world {
+    position: absolute; top: -16px; transform: translateX(-50%);
+    border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 13px solid var(--accent);
+  }
+  .ends { display: flex; justify-content: space-between; font-size: 17px; color: var(--muted); margin-top: 10px; gap: 10px; }
+  .ends span:last-child { text-align: right; }
+  .note { font-size: 16px; color: var(--muted); margin-top: 10px; }
+  .insight { background: #fff4dc; border-radius: 14px; padding: 14px 16px; margin-top: 12px; }
+  .discuss { margin: 0; padding-left: 22px; }
+  .discuss li { margin-bottom: 8px; }
+  .reflect-lead { margin: -4px 0 18px; color: var(--muted); }
+  .rq { margin-bottom: 22px; }
+  .rq:last-child { margin-bottom: 0; }
+  .rq label { display: block; font-weight: 700; font-size: 21px; margin-bottom: 8px; }
+  .rq .num { color: var(--primary); margin-right: 4px; }
+  .rq select, .rq textarea {
+    width: 100%; padding: 12px 14px; border-radius: 14px; border: 2px solid var(--line);
+    background: var(--bg); color: var(--ink); font-size: 19px; line-height: 1.6;
+  }
+  .rq select { margin-bottom: 10px; cursor: pointer; }
+  .rq textarea { resize: vertical; min-height: 92px; }
+  .rq select:focus, .rq textarea:focus { outline: none; border-color: var(--primary); background: #fff; }
+  .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  @media (max-width: 700px) {
+    .options { grid-template-columns: 1fr; }
+    .intro h1 { font-size: 38px; }
+    .hero { gap: 14px; }
+    .hero .emoji { font-size: 56px; }
+    .intro .sub { font-size: 21px; }
+    .intro-cards { grid-template-columns: 1fr; }
+    .theme .tt { font-size: 22px; }
+    .prompt { font-size: 21px; }
+  }
+  @media print {
+    body { background: #fff; }
+    .actions, .no-print { display: none !important; }
+    .panel { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script>
+// ===== 등장인물 =====
+const WHO = {
+  adult:   { e: '🧑', n: '어른', u: '명' },
+  man:     { e: '👨', n: '남자 어른', u: '명' },
+  woman:   { e: '👩', n: '여자 어른', u: '명' },
+  boy:     { e: '👦', n: '남자아이', u: '명' },
+  girl:    { e: '👧', n: '여자아이', u: '명' },
+  grandpa: { e: '👴', n: '할아버지', u: '명' },
+  grandma: { e: '👵', n: '할머니', u: '명' },
+  dog:     { e: '🐶', n: '강아지', u: '마리' },
+  cat:     { e: '🐱', n: '고양이', u: '마리' },
+  // tag: 그림 아래에 붙는 이름표 (그림만으로 구분이 어려운 사람)
+  fat:      { e: '🧑', n: '비만인 사람', u: '명', tag: '비만' },
+  athlete:  { e: '🏃', n: '운동선수', u: '명', tag: '운동선수' },
+  boss:     { e: '🤵', n: '사장님', u: '명', tag: '사장님' },
+  doctor:   { e: '🧑‍⚕️', n: '의사', u: '명', tag: '의사' },
+  homeless: { e: '🧔', n: '노숙인', u: '명', tag: '노숙인' },
+  pregnant: { e: '🤰', n: '임산부', u: '명', tag: '임산부' },
+  friend:   { e: '🧒', n: '내 친구', u: '명', tag: '내 친구' },
+};
+
+// ===== 문제 =====
+// 문제는 '부'별로 묶어서 나와요. 11부는 두 기준이 서로 부딪히는 문제예요.
+const PARTS = {
+  count:     { no: 1,  icon: '🔢', name: '사람 수',         desc: '다치는 사람의 수가 다르다면?' },
+  age:       { no: 2,  icon: '👶', name: '나이',            desc: '어린이와 할아버지·할머니' },
+  gender:    { no: 3,  icon: '🚻', name: '성별',            desc: '남자와 여자' },
+  species:   { no: 4,  icon: '🐶', name: '사람과 동물',     desc: '사람과 동물' },
+  law:       { no: 5,  icon: '🚦', name: '신호 지키기',     desc: '초록불에 건넌 사람과 빨간불에 건넌 사람' },
+  passenger: { no: 6,  icon: '🚗', name: '탑승자와 보행자', desc: '차에 탄 사람과 길을 건너는 사람' },
+  fitness:   { no: 7,  icon: '⚖️', name: '몸집',            desc: '비만인 사람과 운동선수' },
+  status:    { no: 8,  icon: '💼', name: '직업',            desc: '사장님과 노숙인' },
+  care:      { no: 9,  icon: '🤰', name: '임산부',          desc: '배려가 필요한 사람' },
+  equal:     { no: 10, icon: '🟰', name: '똑같을 때',       desc: '양쪽이 똑같다면, 핸들을 꺾을까요?' },
+  clash:     { no: 11, icon: '🤔', name: '부딪히는 문제',   desc: '두 가지 기준이 서로 부딪혀요. 진짜 고민해 볼 시간이에요!' },
+};
+
+// lanes[0] = 그대로 직진하면 부딪히는 쪽, lanes[1] = 방향을 꺾으면 부딪히는 쪽
+// barrier: 공사 벽 → 부딪히면 차에 탄 사람(pass)이 다침
+// tests: 이 문제에서 어떤 기준을 보는지, favor = 그 기준을 따르는 선택
+const A = 'adult', G = 'green', R = 'red';
+const PRACTICE = { icon: '✏️', title: '그림 보는 법 익히기',
+  lanes: [{ who: [A], light: G }, { barrier: true }], pass: [] };
+
+const SCENARIOS = [
+  { part: 'count', title: '어른 3명과 어른 1명',
+    lanes: [{ who: [A, A, A], light: G }, { who: [A], light: G }], pass: [A],
+    tests: [{ dim: 'count', favor: 'swerve' }] },
+
+  { part: 'age', title: '할아버지·할머니와 어린이',
+    lanes: [{ who: ['grandpa', 'grandma'], light: G }, { who: ['boy', 'girl'], light: G }], pass: [A],
+    tests: [{ dim: 'age', favor: 'straight' }] },
+  { part: 'age', title: '어린이 1명과 할아버지 1명',
+    lanes: [{ who: ['girl'], light: G }, { who: ['grandpa'], light: G }], pass: [A],
+    tests: [{ dim: 'age', favor: 'swerve' }] },
+
+  { part: 'gender', title: '남자 어른 2명과 여자 어른 2명',
+    lanes: [{ who: ['man', 'man'], light: G }, { who: ['woman', 'woman'], light: G }], pass: [A],
+    tests: [{ dim: 'gender', favor: 'straight' }] },
+  { part: 'gender', title: '여자아이와 남자아이',
+    lanes: [{ who: ['girl'], light: G }, { who: ['boy'], light: G }], pass: [A],
+    tests: [{ dim: 'gender', favor: 'swerve' }] },
+
+  { part: 'species', title: '강아지·고양이와 어른 1명',
+    lanes: [{ who: ['dog', 'cat'], light: G }, { who: [A], light: G }], pass: [A],
+    tests: [{ dim: 'species', favor: 'straight' }] },
+  { part: 'species', title: '할머니 1명과 강아지 3마리',
+    lanes: [{ who: ['grandma'], light: G }, { who: ['dog', 'dog', 'dog'], light: G }], pass: [A],
+    tests: [{ dim: 'species', favor: 'swerve' }] },
+
+  { part: 'law', title: '똑같은 어른, 다른 신호',
+    lanes: [{ who: [A, A], light: R }, { who: [A, A], light: G }], pass: [A],
+    tests: [{ dim: 'law', favor: 'straight' }] },
+  { part: 'law', title: '똑같은 어린이, 다른 신호',
+    lanes: [{ who: ['boy'], light: G }, { who: ['boy'], light: R }], pass: [A],
+    tests: [{ dim: 'law', favor: 'swerve' }] },
+
+  { part: 'passenger', title: '길 건너는 어른 2명과 차에 탄 어른 2명',
+    lanes: [{ who: [A, A], light: G }, { barrier: true }], pass: [A, A],
+    tests: [{ dim: 'passenger', favor: 'straight' }] },
+  { part: 'passenger', title: '차에 탄 가족과 길 건너는 사람',
+    lanes: [{ barrier: true }, { who: ['woman', 'boy'], light: G }], pass: ['man', 'girl'],
+    tests: [{ dim: 'passenger', favor: 'swerve' }] },
+
+  { part: 'fitness', title: '비만인 사람과 운동선수',
+    lanes: [{ who: ['fat'], light: G }, { who: ['athlete'], light: G }], pass: [A],
+    tests: [{ dim: 'fitness', favor: 'straight' }] },
+
+  { part: 'status', title: '사장님과 노숙인',
+    lanes: [{ who: ['boss'], light: G }, { who: ['homeless'], light: G }], pass: [A],
+    tests: [{ dim: 'status', favor: 'swerve' }] },
+
+  { part: 'care', title: '여자 어른과 임산부',
+    lanes: [{ who: ['woman'], light: G }, { who: ['pregnant'], light: G }], pass: [A],
+    tests: [{ dim: 'care', favor: 'straight' }] },
+
+  { part: 'equal', title: '어른 1명과 어른 1명',
+    lanes: [{ who: [A], light: G }, { who: [A], light: G }], pass: [A],
+    tests: [] },
+
+  { part: 'clash', title: '나이 vs 신호: 빨간불의 어린이 2명과 초록불의 할아버지',
+    lanes: [{ who: ['boy', 'girl'], light: R }, { who: ['grandpa'], light: G }], pass: [A],
+    tests: [{ dim: 'law', favor: 'straight' }, { dim: 'age', favor: 'swerve' }, { dim: 'count', favor: 'swerve' }] },
+  { part: 'clash', title: '직업 vs 신호: 빨간불의 사장님과 초록불의 노숙인',
+    lanes: [{ who: ['boss', 'boss'], light: R }, { who: ['homeless', 'homeless'], light: G }], pass: [A],
+    tests: [{ dim: 'law', favor: 'straight' }, { dim: 'status', favor: 'swerve' }] },
+  { part: 'clash', title: '사람 수 vs 직업: 노숙인 3명과 의사 1명',
+    lanes: [{ who: ['homeless', 'homeless', 'homeless'], light: G }, { who: ['doctor'], light: G }], pass: [A],
+    tests: [{ dim: 'count', favor: 'swerve' }, { dim: 'status', favor: 'straight' }] },
+  { part: 'clash', title: '사람 수 vs 임산부: 임산부 1명과 어른 2명',
+    lanes: [{ who: ['pregnant'], light: G }, { who: [A, A], light: G }], pass: [A],
+    tests: [{ dim: 'count', favor: 'straight' }, { dim: 'care', favor: 'swerve' }] },
+  { part: 'clash', friend: true, title: '사람 수 vs 친구: 모르는 어른 5명과 내 친구 1명',
+    lanes: [{ who: [A, A, A, A, A], light: G }, { who: ['friend'], light: G }], pass: [A],
+    tests: [{ dim: 'count', favor: 'swerve' }] },
+];
+const FRIEND_IDX = SCENARIOS.findIndex(x => x.friend);
+const partCount = key => SCENARIOS.filter(x => x.part === key).length;
+
+// ===== 결과 기준 =====
+// world: 2018년 Nature 연구 결과를 0~100 위치로 대략 옮긴 값 (50 = 가운데)
+const DIMS = [
+  { key: 'count',     title: '사람 수',          left: '적은 쪽 구하기',      right: '많은 쪽 구하기',       world: 80, strong: ['적은 쪽 구하기', '더 많은 사람 구하기'] },
+  { key: 'age',       title: '나이',             left: '어른·노인 구하기',    right: '어린이 구하기',        world: 74, strong: ['어른·노인 구하기', '어린이 구하기'] },
+  { key: 'gender',    title: '성별',             left: '남자 구하기',         right: '여자 구하기',          world: 57, strong: ['남자 구하기', '여자 구하기'] },
+  { key: 'species',   title: '사람과 동물',      left: '동물 구하기',         right: '사람 구하기',          world: 85, strong: ['동물 구하기', '사람 구하기'] },
+  { key: 'law',       title: '신호 지키기',      left: '무단횡단한 사람 구하기', right: '신호 지킨 사람 구하기', world: 68, strong: ['무단횡단한 사람 구하기', '신호 지킨 사람 구하기'] },
+  { key: 'passenger', title: '탑승자와 보행자',  left: '길 건너는 사람 지키기', right: '차에 탄 사람 지키기',  world: 46, strong: ['길 건너는 사람 지키기', '차에 탄 사람 지키기'] },
+  { key: 'fitness',   title: '몸집',             left: '비만인 사람 구하기',  right: '운동선수 구하기',      world: 58, strong: ['비만인 사람 구하기', '운동선수 구하기'] },
+  { key: 'status',    title: '직업',             left: '노숙인 구하기',       right: '사장님·의사 구하기',   world: 60, strong: ['노숙인 구하기', '사장님·의사 구하기'] },
+  { key: 'care',      title: '임산부',           left: '다른 어른 구하기',    right: '임산부 구하기',        world: null, strong: ['다른 어른 구하기', '임산부 구하기'] },
+  { key: 'stay',      title: '핸들을 꺾을까?',   left: '방향 꺾기',           right: '그대로 직진',          world: 55, strong: ['방향을 꺾어서라도 바꾸기', '그대로 직진하기'] },
+];
+
+// ===== 상태 =====
+const state = { screen: 'intro', idx: -1, name: '', practice: null, choices: [], car: null, reflect: { hard: '', hardWhy: '', learn: '', rule: '' } };
+
+const $app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function summarize(list) {
+  const order = [], cnt = {};
+  list.forEach(k => { if (!cnt[k]) { cnt[k] = 0; order.push(k); } cnt[k]++; });
+  return order.map(k => `${WHO[k].n} ${cnt[k]}${WHO[k].u}`).join(', ');
+}
+
+// ===== 장면 그림 =====
+function sceneSVG(sc, opt, uid) {
+  const laneY = [72, 132];
+  const hit = opt === 'straight' ? 0 : 1;
+  const hitLane = sc.lanes[hit];
+  const carHit = !!hitLane.barrier && sc.pass.length > 0;   // 빈 차가 벽에 부딪히면 아무도 안 다침
+  let s = `<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs><marker id="ah${uid}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffd23f"/></marker></defs>
+    <rect width="320" height="200" fill="#cfe8c4"/>
+    <rect y="42" width="320" height="120" fill="#5b6370"/>
+    <line x1="0" y1="102" x2="320" y2="102" stroke="#fff" stroke-width="3" stroke-dasharray="14 10"/>`;
+  // 횡단보도
+  for (let y = 46; y < 160; y += 14) s += `<rect x="200" y="${y}" width="60" height="8" fill="#e9edf2" opacity=".85"/>`;
+
+  // 각 차로의 사람 / 벽 (edge = 그 무리의 왼쪽 끝, 화살표가 여기 앞에서 멈춤)
+  const edge = [198, 198];
+  sc.lanes.forEach((ln, i) => {
+    const cy = laneY[i];
+    if (ln.barrier) {
+      s += `<rect x="204" y="${cy - 22}" width="52" height="44" rx="6" fill="#ff8a00" stroke="#7a3d00" stroke-width="2"/>
+            <path d="M210 ${cy - 16} l14 32 M228 ${cy - 16} l14 32 M246 ${cy - 16} l8 18" stroke="#fff" stroke-width="5"/>`;
+      if (i === hit && carHit) s += `<rect x="198" y="${cy - 27}" width="64" height="54" rx="10" fill="none" stroke="#ff4d4d" stroke-width="4"/>`;
+      return;
+    }
+    const n = ln.who.length, hasTag = ln.who.some(k => WHO[k].tag);
+    const tagW = k => WHO[k].tag ? WHO[k].tag.length * 9.5 + 6 : 0;
+    const size = n > 3 ? 19 : 23, gap = Math.max(size + 2, ...ln.who.map(k => tagW(k) + 3)), w = n * gap;
+    const x0 = 230 - w / 2 + gap / 2;
+    edge[i] = Math.min(198, 230 - w / 2 - 6);
+    const ey = hasTag ? cy - 4 : cy;   // 이름표가 있으면 그림을 살짝 위로
+    if (i === hit) s += `<rect x="${230 - w / 2 - 6}" y="${cy - (hasTag ? 24 : 20)}" width="${w + 12}" height="${hasTag ? 48 : 40}" rx="12" fill="rgba(255,77,77,.45)" stroke="#ff4d4d" stroke-width="3"/>`;
+    ln.who.forEach((k, j) => {
+      const x = x0 + j * gap;
+      s += `<text x="${x}" y="${ey + size * 0.36}" font-size="${size}" text-anchor="middle">${WHO[k].e}</text>`;
+      if (WHO[k].tag) {
+        const tw = tagW(k);
+        s += `<rect x="${x - tw / 2}" y="${ey + 12}" width="${tw}" height="13" rx="4" fill="#fff"/>
+              <text x="${x}" y="${ey + 22}" font-size="9.5" font-weight="700" fill="#1f2a3a" text-anchor="middle">${WHO[k].tag}</text>`;
+      }
+    });
+    // 신호등
+    const col = ln.light === 'red' ? '#ff4d4d' : '#2ecc71';
+    s += `<rect x="290" y="${cy - 14}" width="28" height="28" rx="7" fill="#1f2a3a"/>
+          <circle cx="304" cy="${cy}" r="9" fill="${col}"/>`;
+  });
+
+  // 진행 경로 화살표
+  const path = opt === 'straight'
+    ? `M86 ${laneY[0]} L ${edge[0] - 6} ${laneY[0]}`
+    : `M86 ${laneY[0]} C 130 ${laneY[0]}, 130 ${laneY[1]}, ${edge[1] - 6} ${laneY[1]}`;
+  s += `<path d="${path}" fill="none" stroke="#ffd23f" stroke-width="5" stroke-dasharray="10 6" marker-end="url(#ah${uid})"/>`;
+
+  // 자동차 (위에서 본 모습)
+  const cy = laneY[0];
+  s += `<g>
+    ${carHit ? `<rect x="10" y="${cy - 22}" width="82" height="44" rx="12" fill="rgba(255,77,77,.45)" stroke="#ff4d4d" stroke-width="3"/>` : ''}
+    <rect x="18" y="${cy - 15}" width="66" height="30" rx="9" fill="#3b6ff5"/>
+    <rect x="50" y="${cy - 11}" width="18" height="22" rx="4" fill="#bfe3ff"/>
+    <rect x="26" y="${cy - 11}" width="14" height="22" rx="3" fill="#9ccaf0"/>
+    <rect x="80" y="${cy - 13}" width="4" height="6" rx="1" fill="#ffe680"/>
+    <rect x="80" y="${cy + 7}" width="4" height="6" rx="1" fill="#ffe680"/>
+  </g>`;
+  // 탑승자
+  const passTxt = sc.pass.length ? sc.pass.map(k => WHO[k].e).join('') : '<tspan font-size="13" font-weight="700" fill="#4b5563">없음</tspan>';
+  s += `<rect x="8" y="6" width="${46 + Math.max(1.4, sc.pass.length) * 22}" height="28" rx="14" fill="${carHit ? '#ffd6d6' : '#fff'}" stroke="${carHit ? '#ff4d4d' : '#c9d3df'}" stroke-width="2"/>
+        <text x="17" y="25" font-size="14" font-weight="700" fill="#1f2a3a">탑승</text>
+        <text x="50" y="26" font-size="17">${passTxt}</text>`;
+  s += `</svg>`;
+  return s;
+}
+
+function optionHTML(sc, opt, i, chosen) {
+  const hit = opt === 'straight' ? 0 : 1;
+  const ln = sc.lanes[hit], other = sc.lanes[1 - hit];
+  const title = opt === 'straight' ? '그대로 직진해요' : '방향을 꺾어요';
+  let hurt, note = '';
+  if (ln.barrier && !sc.pass.length) {
+    hurt = `<b style="color:var(--ok)">🙂 빈 공사 벽에 부딪혀요.</b> 차 안에도 아무도 없어요.`;
+    note = '아무도 다치지 않아요.';
+  } else if (ln.barrier) {
+    hurt = `<b>💥 벽에 부딪혀 차에 탄 사람이 다쳐요:</b> ${summarize(sc.pass)}`;
+    note = '길을 건너던 쪽은 무사해요.';
+  } else {
+    hurt = `<b>💥 다치게 되는 쪽:</b> ${summarize(ln.who)}`;
+    note = ln.light === 'red' ? '🔴 빨간불에 길을 건너고 있었어요.' : '🟢 초록불에 길을 건너고 있었어요.';
+    if (other.barrier && sc.pass.length) note += ' 차에 탄 사람은 무사해요.';
+  }
+  const selected = chosen === opt ? ' selected' : '';
+  return `<button class="opt${selected}" data-opt="${opt}">
+    ${sceneSVG(sc, opt, `${state.idx}${opt}`)}
+    <div class="opt-title"><span class="badge">${i}</span>${title}</div>
+    <div class="opt-hurt">${hurt}</div>
+    <div class="opt-note">${note}</div>
+  </button>`;
+}
+
+// ===== 화면 =====
+function render() {
+  window.scrollTo(0, 0);
+  if (state.screen === 'intro') renderIntro();
+  else if (state.screen === 'play') renderPlay();
+  else if (state.screen === 'part') renderPart();
+  else if (state.screen === 'car') renderCar();
+  else renderResult();
+}
+
+function renderIntro() {
+  $app.innerHTML = `<section class="intro">
+    <div class="hero">
+      <div class="emoji">🚗</div>
+      <div>
+        <h1>모럴 머신 교실</h1>
+        <p class="sub">자율주행차는 어떤 선택을 해야 할까요?</p>
+      </div>
+    </div>
+
+    <div class="intro-cards">
+      <div class="icard"><div class="ic">🛑</div><h3>브레이크 고장!</h3><p>스스로 달리는 자율주행차가<br>멈출 수 없게 되었어요.</p></div>
+      <div class="icard"><div class="ic">↔️</div><h3>둘 중 하나만</h3><p><b>그대로 직진</b>할까요,<br><b>방향을 꺾을</b>까요?</p></div>
+      <div class="icard warn"><div class="ic">💡</div><h3>정답은 없어요</h3><p>친구와 달라도 괜찮아요.<br><b>왜</b> 그렇게 생각했는지가 중요해요.</p></div>
+    </div>
+
+    <div class="howto">
+      <h2>이렇게 해요</h2>
+      <ol class="steps">
+        <li><span class="n">1</span><span><b>연습 문제</b>로 그림 보는 법을 익힌 뒤, <b>${SCENARIOS.length}개 상황</b>에서 자율주행차가 갈 길을 골라요.</span></li>
+        <li><span class="n">2</span><span>마지막 질문 <b>“이 차를 살 건가요?”</b>에 답해요.</span></li>
+        <li><span class="n">3</span><span><b>나의 도덕 나침반</b>을 보고, 내 생각을 적어 친구들과 이야기해요.</span></li>
+      </ol>
+      <div class="keys">
+        <span><i class="k-arrow"></i> 차가 가는 길</span>
+        <span><i class="k-hit"></i> 다치게 되는 쪽</span>
+        <span>🟢 초록불에 건너요</span>
+        <span>🔴 빨간불에 건너요</span>
+      </div>
+    </div>
+
+    <div class="start-box">
+      <label for="nm">이름(별명)</label>
+      <input id="nm" maxlength="12" placeholder="안 써도 돼요" value="${esc(state.name)}">
+      <button class="btn" id="start">시작하기 →</button>
+    </div>
+  </section>`;
+  document.getElementById('start').onclick = () => {
+    state.name = document.getElementById('nm').value.trim();
+    state.screen = 'play'; render();
+  };
+  document.getElementById('nm').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('start').click(); });
+}
+
+// 다음 문제로: 부가 바뀌면 부 안내 화면을 먼저 보여줘요
+function goNext() {
+  const total = SCENARIOS.length;
+  if (state.idx >= total - 1) { state.screen = 'car'; return render(); }
+  const prevPart = state.idx >= 0 ? SCENARIOS[state.idx].part : null;
+  state.idx++;
+  state.screen = SCENARIOS[state.idx].part !== prevPart ? 'part' : 'play';
+  render();
+}
+function goPrev() {
+  state.idx--;
+  state.screen = 'play';
+  render();
+}
+
+function renderPart() {
+  const p = PARTS[SCENARIOS[state.idx].part];
+  const nos = Object.values(PARTS).map(x => x.no);
+  const dots = nos.map(n => `<i class="${n < p.no ? 'done' : n === p.no ? 'now' : ''}"></i>`).join('');
+  $app.innerHTML = `<section class="part">
+    <div class="part-card">
+      <span class="part-no">${p.no}부</span>
+      <div class="part-ic">${p.icon}</div>
+      <h2>${p.name}</h2>
+      <p class="desc">${p.desc}</p>
+      <p class="cnt">상황 ${partCount(SCENARIOS[state.idx].part)}개</p>
+      <div class="part-steps">${dots}</div>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" id="prev">← 이전</button>
+      <button class="btn" id="next">시작 →</button>
+    </div>
+  </section>`;
+  document.getElementById('prev').onclick = goPrev;
+  document.getElementById('next').onclick = () => { state.screen = 'play'; render(); };
+}
+
+function renderPlay() {
+  const practice = state.idx < 0;
+  const sc = practice ? PRACTICE : SCENARIOS[state.idx], total = SCENARIOS.length;
+  const chosen = practice ? state.practice : state.choices[state.idx];
+  const p = practice ? null : PARTS[sc.part];
+  const label = practice ? '연습 문제 · 점수에 들어가지 않아요' : `${p.no}부 · ${p.name}`;
+  const feedback = !practice || !chosen ? '' : chosen === 'swerve'
+    ? `<div class="feedback">👍 <b>잘했어요!</b> 방향을 꺾으면 빈 벽에 부딪혀서 아무도 다치지 않아요. 이렇게 그림과 설명을 보고 고르면 돼요.</div>`
+    : `<div class="feedback retry">🤔 <b>다시 볼까요?</b> ②번 그림은 빈 공사 벽이라 아무도 다치지 않아요. 빨간 표시가 어디에 있는지 살펴보세요.</div>`;
+
+  $app.innerHTML = `<section>
+    <div class="topbar">
+      <div class="qnum">${practice ? '연습 문제' : `상황 ${state.idx + 1} / ${total}`}</div>
+      <div class="progress"><div style="width:${practice ? 0 : (state.idx / total) * 100}%"></div></div>
+    </div>
+    <div class="theme"><div class="ic">${practice ? sc.icon : p.icon}</div><div>
+      <div class="lbl">${label}</div><div class="tt">${sc.title}</div></div></div>
+    <div class="prompt">브레이크가 고장 났어요! 자율주행차는 어떻게 해야 할까요?
+      <small>노란 화살표가 차가 가는 길이에요. 빨갛게 표시된 쪽이 다치게 돼요.</small></div>
+    <div class="options">${optionHTML(sc, 'straight', 1, chosen)}${optionHTML(sc, 'swerve', 2, chosen)}</div>
+    ${feedback}
+    <div class="nav">
+      <button class="btn ghost" id="prev" ${practice ? 'style="visibility:hidden"' : ''}>← 이전</button>
+      <button class="btn" id="next" ${chosen ? '' : 'disabled'}>${practice ? '본 문제 시작 →' : state.idx === total - 1 ? '마지막 질문 →' : '다음 →'}</button>
+    </div>
+  </section>`;
+
+  $app.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+    if (practice) { state.practice = b.dataset.opt; return render(); }
+    state.choices[state.idx] = b.dataset.opt;
+    $app.querySelectorAll('.opt').forEach(x => x.classList.toggle('selected', x === b));
+    document.getElementById('next').disabled = false;
+  });
+  document.getElementById('prev').onclick = goPrev;
+  document.getElementById('next').onclick = goNext;
+}
+
+function renderCar() {
+  $app.innerHTML = `<section class="carq">
+    <div style="font-size:56px">🛒🚗</div>
+    <h2>마지막 질문! 이 차를 살 건가요?</h2>
+    <p>우리 가족이 자율주행차를 산다면, 어떤 차를 고를래요?</p>
+    <div class="car-choices">
+      <button class="car-choice${state.car === 'protect' ? ' selected' : ''}" data-v="protect">
+        <span class="big">🛡️ A. 차에 탄 사람을 꼭 지키는 차</span>
+        어떤 상황에서도 나와 우리 가족을 먼저 지켜요. 대신 길을 건너는 사람이 더 많이 다칠 수 있어요.
+      </button>
+      <button class="car-choice${state.car === 'many' ? ' selected' : ''}" data-v="many">
+        <span class="big">⚖️ B. 다치는 사람이 가장 적은 쪽을 고르는 차</span>
+        전체적으로 다치는 사람이 가장 적게 판단해요. 대신 나와 우리 가족이 다칠 수도 있어요.
+      </button>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" id="prev">← 이전</button>
+      <button class="btn" id="next" ${state.car ? '' : 'disabled'}>결과 보기 →</button>
+    </div>
+  </section>`;
+  $app.querySelectorAll('.car-choice').forEach(b => b.onclick = () => {
+    state.car = b.dataset.v;
+    $app.querySelectorAll('.car-choice').forEach(x => x.classList.toggle('selected', x === b));
+    document.getElementById('next').disabled = false;
+  });
+  document.getElementById('prev').onclick = () => { state.screen = 'play'; state.idx = SCENARIOS.length - 1; render(); };  // 마지막 문제로
+  document.getElementById('next').onclick = () => { state.screen = 'result'; render(); };
+}
+
+function scores() {
+  const acc = {};
+  DIMS.forEach(d => acc[d.key] = { sum: 0, n: 0 });
+  SCENARIOS.forEach((sc, i) => {
+    const c = state.choices[i];
+    sc.tests.forEach(t => { acc[t.dim].n++; if (c === t.favor) acc[t.dim].sum++; });
+    acc.stay.n++; if (c === 'straight') acc.stay.sum++;
+  });
+  const out = {};
+  for (const k in acc) out[k] = acc[k].n ? Math.round(acc[k].sum / acc[k].n * 100) : 50;
+  return out;
+}
+
+function renderResult() {
+  const sc = scores();
+  const who = state.name ? `${esc(state.name)}의` : '나의';
+
+  // 가장 뚜렷한 기준
+  let best = null;
+  DIMS.forEach(d => { const g = Math.abs(sc[d.key] - 50); if (g > 0 && (!best || g > best.g)) best = { d, g }; });
+  const lead = best
+    ? `가장 뚜렷했던 나의 기준: <b>${best.d.strong[sc[best.d.key] > 50 ? 1 : 0]}</b>`
+    : '어느 한쪽으로 치우치지 않고 고민했어요.';
+
+  const bars = DIMS.map(d => `<div class="dim">
+      <div class="dim-title">${d.title}</div>
+      <div class="track"><div class="mid"></div>
+        ${d.world == null ? '' : `<div class="mk-world" style="left:${d.world}%"></div>`}
+        <div class="mk-me" style="left:${Math.min(97, Math.max(3, sc[d.key]))}%">나</div>
+      </div>
+      <div class="ends"><span>◀ ${d.left}</span><span>${d.right} ▶</span></div>
+    </div>`).join('');
+
+  const carTxt = state.car === 'protect' ? 'A. 차에 탄 사람(우리 가족)을 꼭 지키는 차' : 'B. 다치는 사람이 가장 적은 쪽을 고르는 차';
+  const savedFriend = state.choices[FRIEND_IDX] === 'straight';
+  const friendTxt = savedFriend ? '모르는 어른 5명 대신 <b>내 친구 1명</b>을 구했어요.' : '내 친구 대신 <b>모르는 어른 5명</b>을 구했어요.';
+  const closeFirst = state.car === 'protect';
+  const compare = savedFriend === closeFirst
+    ? (closeFirst ? '두 질문 모두 <b>나와 가까운 사람</b>을 먼저 지켰어요.' : '두 질문 모두 <b>더 많은 사람</b>을 구하는 쪽을 골랐어요.')
+    : '두 질문에서 고른 쪽이 <b>달라요</b>. 왜 달라졌을까요?';
+  const carInsight = `<p style="margin:0">🧒 상황 ${FRIEND_IDX + 1}(친구 문제)에서: ${friendTxt}</p>
+    <p style="margin:6px 0 0">🛒 내가 고른 차: <b>${carTxt}</b></p>
+    <p style="margin:6px 0 0">👉 ${compare}</p>
+    <div class="insight">🔍 <b>실제 연구에서는</b> 많은 사람들이 “다른 사람들은 B 차를 타야 한다”고 답했어요.
+    그런데 정작 <b>내가 살 차</b>를 고르라고 하니 A 차를 고른 사람이 많았어요. 여러분의 생각은 어떤가요?</div>`;
+
+  const r = state.reflect;
+  const hardOpts = SCENARIOS.map((x, i) =>
+    `<option value="${i}"${r.hard === String(i) ? ' selected' : ''}>상황 ${i + 1} · ${PARTS[x.part].name} · ${x.title}</option>`).join('');
+  const reflect = `<div class="panel">
+      <h2>🤔 생각해 보기</h2>
+      <p class="reflect-lead">정답은 없어요. 결과를 보고 떠오르는 내 생각을 자유롭게 적어 보세요.</p>
+      <div class="rq">
+        <label for="r-hard"><span class="num">1.</span> 가장 고민됐던 상황은 무엇인가요? 왜 고민됐나요?</label>
+        <select id="r-hard"><option value="">상황을 골라 주세요</option>${hardOpts}</select>
+        <textarea id="r-hardWhy" rows="3" placeholder="두 쪽 모두 ~해서 고르기 어려웠어요.">${esc(r.hardWhy)}</textarea>
+      </div>
+      <div class="rq">
+        <label for="r-learn"><span class="num">2.</span> 나의 도덕 나침반을 보고 새롭게 알게 된 점이나 놀란 점이 있나요?</label>
+        <textarea id="r-learn" rows="3" placeholder="나는 생각보다 ~을 중요하게 여기고 있었어요.">${esc(r.learn)}</textarea>
+      </div>
+      <div class="rq">
+        <label for="r-rule"><span class="num">3.</span> 내가 자율주행차를 만든다면, 꼭 지키게 하고 싶은 규칙 한 가지는?</label>
+        <textarea id="r-rule" rows="3" placeholder="자율주행차는 ~해야 해요. 왜냐하면 ~">${esc(r.rule)}</textarea>
+      </div>
+    </div>`;
+
+  $app.innerHTML = `<section class="result">
+    <div style="text-align:center;font-size:56px">🧭</div>
+    <h1>${who} 도덕 나침반</h1>
+    <p class="lead">${lead}</p>
+
+    <div class="panel">
+      <h2>나는 어떤 기준으로 골랐을까?</h2>
+      <div class="legend"><span><i class="dot-me"></i> 나의 선택</span><span><i class="dot-world"></i> 세계 사람들의 경향</span></div>
+      ${bars}
+      <p class="note">※ ‘세계’ 표시는 2018년 MIT 연구(전 세계 약 4천만 건의 응답) 결과를 대략 나타낸 것이에요. ‘임산부’는 그 연구에서 따로 살펴보지 않아 세계 표시가 없어요. 상황 수가 적어서 내 결과는 참고로만 봐 주세요.</p>
+    </div>
+
+    <div class="panel"><h2>🤝 나와 가까운 사람, 그리고 많은 사람</h2>${carInsight}</div>
+
+    ${reflect}
+
+    <div class="panel">
+      <h2>💬 함께 이야기해 봐요</h2>
+      <ol class="discuss">
+        <li>친구와 선택이 가장 많이 달랐던 상황은 몇 번인가요? 왜 달랐을까요?</li>
+        <li>자율주행차가 어떻게 판단할지는 <b>누가</b> 정해야 할까요? (자동차 회사, 정부, 차 주인, 모든 시민…)</li>
+        <li>자율주행차 사고가 나면 <b>누구의 책임</b>일까요?</li>
+        <li><b>성별, 몸집, 직업</b>에 따라 구할 사람을 정해도 될까요? 이것도 <b>차별</b>일까요? 내 결과를 보고 이야기해 봐요.</li>
+        <li>모르는 사람 여러 명보다 <b>내 친구나 가족</b>을 먼저 지키는 것은 옳을까요?</li>
+        <li><b>임산부, 어린이, 할아버지·할머니</b>처럼 우리 사회가 배려하는 사람들은 자율주행차에서도 먼저 보호해야 할까요?</li>
+        <li>사람의 생명에 순서를 정하는 것이 옳을까요? 정하지 않는다면 차는 어떻게 해야 할까요?</li>
+        <li>사고가 나지 않게 하려면 자율주행차를 어떻게 만들어야 할까요?</li>
+      </ol>
+    </div>
+
+    <div class="actions">
+      <button class="btn ghost" id="print">🖨️ 인쇄하기</button>
+      <button class="btn" id="again">다시 하기</button>
+    </div>
+  </section>`;
+  ['hard', 'hardWhy', 'learn', 'rule'].forEach(k =>
+    document.getElementById('r-' + k).addEventListener('input', e => { state.reflect[k] = e.target.value; }));
+  document.getElementById('print').onclick = () => window.print();
+  document.getElementById('again').onclick = () => {
+    Object.assign(state, { screen: 'intro', idx: -1, practice: null, choices: [], car: null, reflect: { hard: '', hardWhy: '', learn: '', rule: '' } });
+    render();
+  };
+}
+
+render();
+</script>
+</body>
+</html>
